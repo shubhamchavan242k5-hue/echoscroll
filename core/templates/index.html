@@ -5,209 +5,234 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EchoScroll Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="manifest" href="/static/manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #ff0050; --glass: rgba(255, 255, 255, 0.1); --bg: #000; }
-        body, html { margin: 0; padding: 0; height: 100%; background: #121212; color: #fff; font-family: -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        
-        .app-container { width: 100%; max-width: 420px; height: 100vh; background: #000; position: relative; overflow: hidden; border: 1px solid #333; }
-        @media (min-width: 500px) { .app-container { height: 92vh; border-radius: 20px; box-shadow: 0 0 100px rgba(0,0,0,0.9); } }
+        :root { --insta-pink: #ff0050; --bg: #000; --glass: rgba(255, 255, 255, 0.15); }
+        body, html { margin: 0; padding: 0; height: 100%; background: #121212; color: #fff; font-family: -apple-system, sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; }
 
-        /* HEADER TABS */
-        .top-tabs { position: absolute; top: 0; width: 100%; z-index: 100; background: linear-gradient(rgba(0,0,0,0.8), transparent); padding: 15px 0; display: flex; justify-content: center; gap: 20px; }
-        .tab-item { font-size: 14px; font-weight: 600; opacity: 0.6; cursor: pointer; transition: 0.3s; padding-bottom: 5px; }
-        .tab-item.active { opacity: 1; border-bottom: 2px solid white; }
+        .app-container { width: 100%; max-width: 420px; height: 100vh; background: #000; position: relative; display: flex; flex-direction: column; }
 
-        /* REELS SCROLLER */
+        @media (min-width: 500px) { .app-container { height: 92vh; border-radius: 30px; border: 8px solid #262626; overflow: hidden; } }
+
+        /* HEADER */
+        .header { padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262626; background: #000; }
+        .logo { font-size: 20px; font-weight: bold; color: #fff; letter-spacing: 1px; }
+        .refresh-btn { cursor: pointer; color: var(--insta-pink); font-size: 18px; }
+
+        /* PAGES */
+        .page { display: none; flex: 1; flex-direction: column; overflow-y: auto; scrollbar-width: none; }
+        .page.active { display: flex; }
+
+        /* GRID */
+        .home-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; }
+        .grid-item { aspect-ratio: 1; position: relative; cursor: pointer; background: #111; }
+        .grid-item img { width: 100%; height: 100%; object-fit: cover; }
+        .grid-play-icon { position: absolute; top: 5px; right: 5px; font-size: 10px; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 50%; }
+
+        /* REELS UI */
+        #reels-page { position: absolute; inset: 0; z-index: 2000; background: #000; display: none; }
+        #reels-page.active { display: block; }
         .swiper { width: 100%; height: 100%; }
-        .swiper-slide { position: relative; background: #000; }
-        .main-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
+        .swiper-slide { position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+        .reel-img { width: 100%; height: auto; max-height: 100%; object-fit: contain; }
+        .reel-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.4) 100%); z-index: 5; }
 
-        /* OVERLAYS (Search, Comments, Profile) */
-        .overlay { position: absolute; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; padding: 20px; }
-        .overlay.active { display: flex; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .overlay-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .search-input-full { flex: 1; background: #262626; border: none; border-radius: 8px; color: #fff; padding: 10px; outline: none; }
+        .side-actions { position: absolute; right: 15px; bottom: 100px; display: flex; flex-direction: column; gap: 22px; align-items: center; z-index: 10; }
+        .action-btn { text-align: center; cursor: pointer; }
+        .action-btn i { font-size: 28px; text-shadow: 0 0 10px #000; }
+        .action-btn p { font-size: 11px; margin-top: 5px; font-weight: bold; }
+        .liked { color: var(--insta-pink); }
 
-        /* COMMENT SHEET */
-        #comment-sheet { position: absolute; bottom: 0; width: 100%; height: 60%; background: #262626; z-index: 3000; border-radius: 15px 15px 0 0; display: none; flex-direction: column; padding: 15px; box-sizing: border-box; }
-        #comment-sheet.active { display: flex; animation: slideUp 0.3s ease; }
-        .comment-list { flex: 1; overflow-y: auto; margin-top: 10px; }
-        .comment-item { margin-bottom: 12px; font-size: 13px; }
-        .comment-input-row { border-top: 1px solid #444; padding-top: 10px; display: flex; gap: 10px; }
+        .song-info { position: absolute; bottom: 70px; left: 15px; right: 80px; z-index: 10; }
+        .song-info h4 { margin: 0; font-size: 15px; }
+        .song-info p { margin: 8px 0; font-size: 13px; opacity: 0.8; display: flex; align-items: center; gap: 6px; }
 
-        /* SIDE ACTIONS */
-        .side-bar { position: absolute; right: 12px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 20; }
-        .side-item { text-align: center; font-size: 11px; cursor: pointer; }
-        .side-item i { font-size: 28px; margin-bottom: 4px; }
-        .fa-heart.liked { color: var(--primary); }
+        /* CONTROLS */
+        .progress-bar { position: absolute; bottom: 56px; left: 0; height: 2px; background: #fff; width: 0%; z-index: 100; transition: width 0.1s linear; }
+        .auto-scroll-btn { position: absolute; top: 15px; right: 15px; z-index: 100; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 20px; font-size: 10px; border: 1px solid #444; cursor: pointer; }
+        .auto-scroll-btn.on { background: var(--insta-pink); border: none; }
+
+        .heart-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); font-size: 80px; color: #fff; opacity: 0; z-index: 50; pointer-events: none; }
+        .heart-overlay.animate { animation: heartCenter 0.8s ease-out; }
+        @keyframes heartCenter { 0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 
         /* BOTTOM NAV */
-        .bottom-nav { position: absolute; bottom: 0; width: 100%; height: 55px; background: #000; border-top: 1px solid #333; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-        .nav-btn { font-size: 22px; color: #fff; opacity: 0.7; cursor: pointer; }
-        .nav-btn.active { opacity: 1; }
+        .bottom-nav { height: 55px; border-top: 1px solid #262626; display: flex; justify-content: space-around; align-items: center; background: #000; z-index: 1001; }
+        .nav-icon { font-size: 22px; color: #fff; opacity: 0.5; cursor: pointer; }
+        .nav-icon.active { opacity: 1; }
 
-        .reels-info { position: absolute; bottom: 70px; left: 15px; z-index: 20; }
-        .progress-bar { position: absolute; bottom: 55px; left: 0; height: 2px; background: #fff; width: 0%; z-index: 100; }
-        
-        #start-screen { position: absolute; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #splash { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- Play to Start -->
-        <div id="start-screen" onclick="startApp()">
-            <i class="fas fa-play-circle" style="font-size: 80px; color: var(--primary);"></i>
-            <h3 style="margin-top: 20px;">Tap to Start</h3>
-        </div>
-
-        <!-- Top Navigation -->
-        <div class="top-tabs">
-            <span class="tab-item active" onclick="loadMusic('bollywood trending', this)">For You</span>
-            <span class="tab-item" onclick="loadMusic('punjabi hits', this)">Punjabi</span>
-            <span class="tab-item" onclick="loadMusic('hindi lofi', this)">Lofi</span>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="progress-bar" id="p-bar"></div>
-
-        <!-- Reels Feed -->
-        <div class="swiper">
-            <div class="swiper-wrapper" id="main-feed"></div>
-        </div>
-
-        <!-- SEARCH OVERLAY -->
-        <div class="overlay" id="search-overlay">
-            <div class="overlay-header">
-                <i class="fas fa-arrow-left" onclick="closeOverlays()"></i>
-                <input type="text" class="search-input-full" id="full-search" placeholder="Search..." onkeypress="if(event.key==='Enter') runSearch()">
-            </div>
-            <div id="search-results" style="overflow-y:auto; flex:1;"></div>
-        </div>
-
-        <!-- COMMENT SHEET -->
-        <div id="comment-sheet">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #444; padding-bottom:5px;">
-                <b>Comments</b>
-                <i class="fas fa-times" onclick="closeOverlays()"></i>
-            </div>
-            <div class="comment-list" id="clist">
-                <div class="comment-item"><b>user1:</b> Wow! This song is fire 🔥</div>
-                <div class="comment-item"><b>music_lover:</b> Best drop ever! ❤️</div>
-            </div>
-            <div class="comment-input-row">
-                <input type="text" class="search-input-full" placeholder="Add a comment...">
-                <button style="background:none; border:none; color:var(--primary); font-weight:bold;">Post</button>
-            </div>
-        </div>
-
-        <!-- Bottom Nav Bar -->
-        <div class="bottom-nav">
-            <div class="nav-btn active" onclick="location.reload()"><i class="fas fa-home"></i></div>
-            <div class="nav-btn" onclick="openSearch()"><i class="fas fa-search"></i></div>
-            <div class="nav-btn"><i class="fas fa-plus-square"></i></div>
-            <div class="nav-btn"><i class="fas fa-film" style="color:var(--primary)"></i></div>
-            <div class="nav-btn" onclick="alert('Profile Coming Soon!')"><i class="fas fa-user-circle"></i></div>
-        </div>
+<div class="app-container">
+    <!-- SPLASH -->
+    <div id="splash" onclick="startApp()">
+        <i class="fab fa-instagram" style="font-size: 60px;"></i>
+        <p style="margin-top:20px; font-weight: bold; letter-spacing: 2px;">ECHOSCROLL</p>
+        <span style="color:var(--insta-pink); font-size: 12px;">Click to Start</span>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        let swiper;
-        let songs = [];
-        let currentAudio = null;
+    <!-- HOME -->
+    <div id="home-page" class="page active">
+        <div class="header"><span class="logo">EchoScroll</span><i class="fas fa-sync-alt refresh-btn" onclick="loadFeed()"></i></div>
+        <div class="home-grid" id="main-grid"></div>
+    </div>
 
-        async function loadMusic(q = 'bollywood trending', el = null) {
-            if(el) {
-                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-                el.classList.add('active');
-            }
-            const res = await fetch(`/api/feed/?q=${q}`);
-            songs = await res.json();
-            
-            const feed = document.getElementById('main-feed');
-            feed.innerHTML = songs.map((s, i) => `
-                <div class="swiper-slide">
-                    <img src="${s.cover}" class="main-img" onclick="togglePlay()">
-                    
-                    <div class="side-bar">
-                        <div class="side-item" onclick="toggleLike(this)"><i class="fas fa-heart"></i><p>1.2M</p></div>
-                        <div class="side-item" onclick="openComments()"><i class="fas fa-comment"></i><p>845</p></div>
-                        <div class="side-item"><i class="fas fa-share"></i><p>Share</p></div>
-                    </div>
+    <!-- SEARCH -->
+    <div id="search-page" class="page">
+        <div style="padding:15px;"><input type="text" id="s-input" placeholder="Search music..." style="width:100%; background:#262626; border:none; padding:10px; border-radius:10px; color:#fff;" onkeypress="if(event.key==='Enter') runSearch()"></div>
+        <div class="home-grid" id="search-grid"></div>
+    </div>
 
-                    <div class="reels-info">
-                        <p style="font-weight:bold; margin:0;">${s.title}</p>
-                        <p style="font-size:12px; opacity:0.8;">🎵 ${s.artist}</p>
-                    </div>
+    <!-- REELS -->
+    <div id="reels-page">
+        <div class="auto-scroll-btn" id="as-btn" onclick="toggleAutoScroll()">Auto-Scroll: OFF</div>
+        <i class="fas fa-arrow-left" onclick="closeReels()" style="position:absolute; top:15px; left:15px; z-index:100; font-size:20px; cursor:pointer;"></i>
+        <div class="progress-bar"><div id="p-fill" style="height:100%; width:0%; background:#fff;"></div></div>
+        <div class="swiper"><div class="swiper-wrapper" id="reels-wrapper"></div></div>
+    </div>
+
+    <!-- NAV -->
+    <div class="bottom-nav">
+        <div class="nav-icon active" onclick="navTo('home-page', this)"><i class="fas fa-home"></i></div>
+        <div class="nav-icon" onclick="navTo('search-page', this)"><i class="fas fa-search"></i></div>
+        <div class="nav-icon"><i class="far fa-plus-square"></i></div>
+        <div class="nav-icon" onclick="openReels(0)"><i class="fas fa-clapperboard"></i></div>
+        <div class="nav-icon"><i class="far fa-user-circle"></i></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    let swiper;
+    let songs = [];
+    let currentAudio = new Audio();
+    let isAutoScroll = false;
+
+    const keywords = ['bollywood trending', 'arijit singh', 'hindi lofi', 'punjabi hits', 'indian hip hop'];
+
+    // Hard Stop Audio
+    function stopAudio() {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.src = "";
+    }
+
+    async function loadFeed() {
+        stopAudio();
+        const q = keywords[Math.floor(Math.random() * keywords.length)];
+        const res = await fetch(`/api/feed/?q=${q}`);
+        songs = await res.json();
+        renderGrid('main-grid', songs);
+    }
+
+    function renderGrid(containerId, data) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = data.map((s, i) => `
+            <div class="grid-item" onclick="openReels(${i})">
+                <img src="${s.cover}" loading="lazy">
+                <i class="fas fa-play grid-play-icon"></i>
+            </div>
+        `).join('');
+    }
+
+    function openReels(index) {
+        stopAudio(); // Har baar naya reel khulne par purana gaana band
+        document.getElementById('reels-page').classList.add('active');
+        const wrapper = document.getElementById('reels-wrapper');
+        
+        wrapper.innerHTML = songs.map((s, i) => `
+            <div class="swiper-slide">
+                <div class="reel-media-box" ondblclick="handleDblClick(${i})">
+                    <img src="${s.cover}" class="reel-img">
+                    <div class="reel-overlay" onclick="togglePlay()"></div>
+                    <i class="fas fa-heart heart-overlay" id="heart-pop-${i}"></i>
                 </div>
-            `).join('');
+                <div class="side-actions">
+                    <div class="action-btn" onclick="likeSong(${i})"><i class="fas fa-heart" id="like-icon-${i}"></i><p>1.2M</p></div>
+                    <div class="action-btn"><i class="fas fa-comment"></i><p>8K</p></div>
+                    <div class="action-btn"><i class="fas fa-paper-plane"></i><p>Share</p></div>
+                </div>
+                <div class="song-info">
+                    <h4>@music_echo • Follow</h4>
+                    <p>${s.title} - ${s.artist}</p>
+                    <p style="font-size:11px;"><i class="fas fa-music"></i> Original Audio</p>
+                </div>
+            </div>
+        `).join('');
 
-            if(swiper) swiper.destroy();
-            initSwiper();
-        }
+        if (swiper) swiper.destroy();
+        swiper = new Swiper('.swiper', {
+            direction: 'vertical',
+            mousewheel: true,
+            initialSlide: index,
+            on: { slideChange: () => playReel() }
+        });
+        playReel();
+    }
 
-        function initSwiper() {
-            swiper = new Swiper('.swiper', { 
-                direction: 'vertical', 
-                mousewheel: true,
-                on: { slideChange: () => playSong() }
+    function playReel() {
+        const idx = swiper.activeIndex;
+        if(!songs[idx]) return;
+
+        currentAudio.pause(); // Safety check
+        currentAudio.src = songs[idx].audio_url;
+        currentAudio.play().catch(e => console.log("User must interact first"));
+
+        currentAudio.ontimeupdate = () => {
+            const p = (currentAudio.currentTime / currentAudio.duration) * 100;
+            const fill = document.getElementById('p-fill');
+            if(fill) fill.style.width = p + '%';
+        };
+        currentAudio.onended = () => { if(isAutoScroll) swiper.slideNext(); };
+
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: songs[idx].title, artist: songs[idx].artist,
+                artwork: [{ src: songs[idx].cover, sizes: '512x512', type: 'image/jpeg' }]
             });
         }
+    }
 
-        function playSong() {
-            if(currentAudio) currentAudio.pause();
-            const song = songs[swiper.activeIndex];
-            const pbar = document.getElementById('p-bar');
+    function navTo(page, btn) {
+        stopAudio();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(page).classList.add('active');
+        document.querySelectorAll('.nav-icon').forEach(n => n.classList.remove('active'));
+        btn.classList.add('active');
+        closeReels();
+    }
 
-            currentAudio = new Audio(song.audio_url);
-            currentAudio.play().catch(() => console.log("Click to play"));
+    function closeReels() {
+        document.getElementById('reels-page').classList.remove('active');
+        stopAudio();
+    }
 
-            currentAudio.ontimeupdate = () => {
-                pbar.style.width = (currentAudio.currentTime / currentAudio.duration) * 100 + "%";
-            };
-            currentAudio.onended = () => swiper.slideNext();
-        }
+    async function runSearch() {
+        const q = document.getElementById('s-input').value;
+        if(!q) return;
+        const res = await fetch(`/api/feed/?q=${q}`);
+        songs = await res.json(); // Search results become the new 'songs' list
+        renderGrid('search-grid', songs);
+    }
 
-        function togglePlay() {
-            if(!currentAudio) return;
-            currentAudio.paused ? currentAudio.play() : currentAudio.pause();
-        }
+    function handleDblClick(i) {
+        const h = document.getElementById(`heart-pop-${i}`);
+        h.classList.add('animate');
+        document.getElementById(`like-icon-${i}`).classList.add('liked');
+        setTimeout(() => h.classList.remove('animate'), 800);
+    }
 
-        function openSearch() {
-            document.getElementById('search-overlay').classList.add('active');
-        }
-
-        function openComments() {
-            document.getElementById('comment-sheet').classList.add('active');
-        }
-
-        function closeOverlays() {
-            document.querySelectorAll('.overlay, #comment-sheet').forEach(o => o.classList.remove('active'));
-        }
-
-        function runSearch() {
-            const q = document.getElementById('full-search').value;
-            if(q) {
-                closeOverlays();
-                loadMusic(q);
-            }
-        }
-
-        function toggleLike(el) {
-            el.querySelector('i').classList.toggle('liked');
-        }
-
-        function startApp() {
-            document.getElementById('start-screen').style.display = 'none';
-            playSong();
-        }
-
-        loadMusic();
-    </script>
+    function likeSong(i) { document.getElementById(`like-icon-${i}`).classList.add('liked'); }
+    function togglePlay() { currentAudio.paused ? currentAudio.play() : currentAudio.pause(); }
+    function toggleAutoScroll() {
+        isAutoScroll = !isAutoScroll;
+        document.getElementById('as-btn').classList.toggle('on');
+        document.getElementById('as-btn').innerText = isAutoScroll ? "Auto-Scroll: ON" : "Auto-Scroll: OFF";
+    }
+    function startApp() { document.getElementById('splash').style.display = 'none'; loadFeed(); }
+</script>
 </body>
 </html>

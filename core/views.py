@@ -3,10 +3,7 @@ import requests
 from django.http import JsonResponse
 
 def get_music_feed(request):
-    # फ्रंटएंड से 'q' (query) मांगना, अगर कुछ न मिले तो 'trending' सर्च करना
-    query = request.GET.get('q', 'trending bollywood')
-    
-    # iTunes API में सर्च करना (Limit 50 कर दी है ताकि हज़ारों गानों में से टॉप 50 आएं)
+    query = request.GET.get('q', 'bollywood trending')
     url = f"https://itunes.apple.com/search?term={query}&entity=song&limit=50"
     
     try:
@@ -21,7 +18,7 @@ def get_music_feed(request):
                 'title': track.get('trackName'),
                 'artist': track.get('artistName'),
                 'audio_url': track.get('previewUrl'),
-                'cover': track.get('artworkUrl100', '').replace('100x100bb', '600x600bb'),
+                'cover': track.get('artworkUrl100', '').replace('100x100bb', '800x800bb'), # High Quality
             })
         return JsonResponse(music_data, safe=False)
     except Exception as e:
